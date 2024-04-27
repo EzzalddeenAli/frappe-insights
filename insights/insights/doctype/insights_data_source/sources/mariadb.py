@@ -8,12 +8,12 @@ from sqlalchemy import select as Select
 from sqlalchemy import table as Table
 from sqlalchemy import text
 from sqlalchemy.engine.base import Connection
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from insights.insights.query_builders.sql_builder import SQLQueryBuilder
 
 from .base_database import (
     BaseDatabase,
-    DatabaseConnectionError,
     DatabaseCredentialsError,
     DatabaseParallelConnectionError,
 )
@@ -104,16 +104,26 @@ class MariaDB(BaseDatabase):
             ssl_verify_cert=use_ssl,
             charset="utf8mb4",
             use_unicode=True,
+            connect_args={"connect_timeout": 1},
         )
-        self.query_builder: SQLQueryBuilder = SQLQueryBuilder()
+        self.query_builder: SQLQueryBuilder = SQLQueryBuilder(self.engine)
         self.table_factory: MariaDBTableFactory = MariaDBTableFactory(data_source)
 
-    def handle_db_exception(self, e):
+    @retry(
+        retry=retry_if_exception_type((DatabaseParallelConnectionError,)),
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        reraise=True,
+    )
+    def connect(self, *args, **kwargs):
+        return super().connect(*args, **kwargs)
+
+    def handle_db_connection_error(self, e):
         if "Access denied" in str(e):
             raise DatabaseCredentialsError()
         if "Packet sequence number wrong" in str(e):
             raise DatabaseParallelConnectionError()
-        super().handle_db_exception(e)
+        super().handle_db_connection_error(e)
 
     def sync_tables(self, tables=None, force=False):
         with self.engine.begin() as connection:

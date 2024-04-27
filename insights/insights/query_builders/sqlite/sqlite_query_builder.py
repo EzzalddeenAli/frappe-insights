@@ -48,6 +48,8 @@ class SQLiteColumnFormatter(ColumnFormatter):
                 date,
                 ("-" + func.mod((month - 1), 3) + " months"),
             )
+        else:
+            return func.strftime(format, column)
 
         return column
 
@@ -121,7 +123,8 @@ class SQLiteFunctions(Functions):
 
 
 class SQLiteQueryBuilder(SQLQueryBuilder):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, engine):
+        super().__init__(engine)
+        self.engine = engine
         self.functions = SQLiteFunctions
         self.column_formatter = SQLiteColumnFormatter

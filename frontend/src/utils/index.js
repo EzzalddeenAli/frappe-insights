@@ -3,8 +3,27 @@ import { createToast } from '@/utils/toasts'
 import { watchDebounced } from '@vueuse/core'
 import domtoimage from 'dom-to-image'
 import { call } from 'frappe-ui'
-import { Baseline, Calendar, CalendarClock, Clock, Hash, Type } from 'lucide-vue-next'
+import {
+	Baseline,
+	Calendar,
+	CalendarClock,
+	Clock,
+	Hash,
+	ShieldQuestion,
+	ToggleLeft,
+	Type,
+} from 'lucide-vue-next'
 import { computed, unref, watch } from 'vue'
+
+export const COLUMN_TYPES = [
+	{ label: 'String', value: 'String' },
+	{ label: 'Integer', value: 'Integer' },
+	{ label: 'Decimal', value: 'Decimal' },
+	{ label: 'Text', value: 'Text' },
+	{ label: 'Datetime', value: 'Datetime' },
+	{ label: 'Date', value: 'Date' },
+	{ label: 'Time', value: 'Time' },
+]
 
 export const fieldtypesToIcon = {
 	Integer: Hash,
@@ -17,6 +36,15 @@ export const fieldtypesToIcon = {
 	'Long Text': Type,
 }
 
+export const returnTypesToIcon = {
+	number: Hash,
+	string: Type,
+	boolean: ToggleLeft,
+	date: Calendar,
+	datetime: CalendarClock,
+	any: ShieldQuestion,
+}
+
 export const FIELDTYPES = {
 	NUMBER: ['Integer', 'Decimal'],
 	TEXT: ['Text', 'String'],
@@ -24,17 +52,20 @@ export const FIELDTYPES = {
 }
 
 export const AGGREGATIONS = [
-	{ label: 'No Aggregation', value: 'None' },
-	{ label: 'Unique', value: 'group by' },
-	{ label: 'Count of Records', value: 'count' },
-	{ label: 'Sum of', value: 'sum' },
-	{ label: 'Average of', value: 'avg' },
-	{ label: 'Cumulative Count of Records', value: 'cumulative count' },
-	{ label: 'Cumulative Sum of', value: 'cumulative sum' },
-	{ label: 'Unique values of', value: 'distinct' },
-	{ label: 'Unique count of', value: 'distinct_count' },
-	{ label: 'Minimum of', value: 'min' },
-	{ label: 'Maximum of', value: 'max' },
+	{ label: 'Unique', value: 'group by', description: 'Group by' },
+	{ label: 'Count of Records', value: 'count', description: 'Count' },
+	{ label: 'Sum of', value: 'sum', description: 'Sum' },
+	{ label: 'Average of', value: 'avg', description: 'Average' },
+	{
+		label: 'Cumulative Count of Records',
+		value: 'cumulative count',
+		description: 'Cumulative Count',
+	},
+	{ label: 'Cumulative Sum of', value: 'cumulative sum', description: 'Cumulative Sum' },
+	{ label: 'Unique values of', value: 'distinct', description: 'Distinct' },
+	{ label: 'Unique count of', value: 'distinct_count', description: 'Distinct Count' },
+	{ label: 'Minimum of', value: 'min', description: 'Minimum' },
+	{ label: 'Maximum of', value: 'max', description: 'Maximum' },
 ]
 
 export const GRANULARITIES = [
@@ -243,7 +274,7 @@ export function getShortNumber(number, precision = 0) {
 	return formatted
 }
 
-export function formatNumber(number, precision = 0) {
+export function formatNumber(number, precision = 2) {
 	precision = precision || guessPrecision(number)
 	const session = sessionStore()
 	const locale = session.user?.country == 'India' ? 'en-IN' : session.user?.locale

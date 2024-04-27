@@ -1,7 +1,7 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 import frappe
@@ -9,72 +9,27 @@ import pandas as pd
 import sqlparse
 from frappe import _dict
 
-from insights.utils import InsightsDataSource, InsightsQuery, ResultColumn
+from insights.utils import InsightsDataSource, ResultColumn
 
 
-class InsightsTableColumn:
-    @classmethod
-    def from_dict(cls, obj):
-        column = _dict(
-            label=obj.get("alias") or obj.get("label") or obj.get("column"),
-            column=obj.get("alias") or obj.get("label") or obj.get("column"),
-            type=obj.get("type") or "String",
-        )
-        if not column.label:
-            frappe.throw("Column Label is required")
-        if not column.column:
-            frappe.throw("Column Name is required")
-        return column
-
-    @classmethod
-    def from_dicts(cls, objs):
-        return [InsightsTableColumn.from_dict(obj) for obj in objs]
-
-
-QUERY_RESULT_CACHE_PREFIX = "insights_query_results"
-
-
-class CachedResults:
-    @classmethod
-    def exists(cls, query):
-        key = f"{QUERY_RESULT_CACHE_PREFIX}:{query}"
-        return frappe.cache().exists(key)
-
-    @classmethod
-    def get(cls, query):
-        key = f"{QUERY_RESULT_CACHE_PREFIX}:{query}"
-        results_str = frappe.cache().get_value(key)
-        if not results_str:
-            return None
-        results = frappe.parse_json(results_str)
-        if not results:
-            return None
-        return results
-
-    @classmethod
-    def set(cls, query, results):
-        key = f"{QUERY_RESULT_CACHE_PREFIX}:{query}"
-        results_str = frappe.as_json(results)
-        frappe.cache().set_value(key, results_str)
-
-
-class Status(Enum):
+class QueryStatus(Enum):
     PENDING = "Pending Execution"
     SUCCESS = "Execution Successful"
     FAILED = "Execution Failed"
 
 
 def update_sql(query):
-    query.status = Status.SUCCESS.value
+    query.status = QueryStatus.SUCCESS.value
     if not query.data_source:
         return
     data_source = InsightsDataSource.get_doc(query.data_source)
     sql = data_source.build_query(query)
     sql = format_query(sql)
-    if not sql or query.sql == sql:
+    if query.sql == sql:
         return
     query.sql = sql
-    query.status = Status.PENDING.value
+    query.update_query_results()
+    query.status = QueryStatus.PENDING.value if sql else QueryStatus.SUCCESS.value
 
 
 def format_query(query):
@@ -218,12 +173,12 @@ def infer_type(value):
         if val % 1 == 0:
             return "Integer"
         return "Decimal"
-    except BaseException:
+    except Exception:
         try:
             # test if datetime
             pd.to_datetime(value)
             return "Datetime"
-        except BaseException:
+        except Exception:
             return "String"
 
 
@@ -280,7 +235,11 @@ class Column(frappe._dict):
         return [Column(**d) for d in dicts]
 
     def is_aggregate(self):
-        return self.aggregation and self.aggregation != "custom"
+        return (
+            self.aggregation
+            and self.aggregation.lower() != "custom"
+            and self.aggregation.lower() != "group by"
+        )
 
     def is_expression(self):
         return (
@@ -306,8 +265,11 @@ class Column(frappe._dict):
         return self.type in ["String", "Text"]
 
     def is_measure(self):
-        return self.aggregation.lower() != "group by" and (
-            self.is_numeric_type() or self.is_aggregate() or self.is_expression()
+        # TODO: if is_expression and is_aggregate then it is a measure (can't determine if aggregation is set)
+        return (
+            self.is_numeric_type()
+            or self.is_aggregate()
+            or (self.is_expression() and self.is_numeric_type())
         )
 
     def is_dimension(self):

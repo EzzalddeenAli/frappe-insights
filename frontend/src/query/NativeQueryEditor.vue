@@ -4,12 +4,18 @@ import { call } from 'frappe-ui'
 import { computed, inject, ref, watch } from 'vue'
 import SchemaExplorerDialog from './SchemaExplorerDialog.vue'
 
+const props = defineProps({
+	showToolbar: { type: Boolean, default: true },
+})
+
 const query = inject('query')
 if (query.doc.data_source) {
-	call('insights.api.data_sources.get_source_schema', {
-		data_source: query.doc.data_source,
+	call('run_doc_method', {
+		method: 'get_schema',
+		dt: 'Insights Data Source',
+		dn: query.doc.data_source,
 	}).then((response) => {
-		query.sourceSchema = response
+		query.sourceSchema = response.message
 	})
 }
 const completions = computed(() => {
@@ -43,7 +49,7 @@ watch(
 </script>
 
 <template>
-	<div class="relative flex flex-1 flex-col overflow-y-scroll">
+	<div class="relative flex flex-1 flex-col overflow-y-auto">
 		<Code
 			:key="completions.tables.length"
 			language="sql"
@@ -52,20 +58,23 @@ watch(
 			:tables="completions.tables"
 			placeholder="Type your query here"
 		></Code>
-		<div class="sticky bottom-0 flex gap-2 bg-white p-2">
+		<div v-if="props.showToolbar" class="sticky bottom-0 flex gap-1 border-t bg-white p-1">
 			<div>
 				<Button
-					variant="subtle"
-					icon="book-open"
+					variant="outline"
+					iconLeft="book-open"
 					@click="showDataExplorer = !showDataExplorer"
-				></Button>
+					label="Tables"
+				>
+				</Button>
 			</div>
 			<div>
 				<Button
-					variant="solid"
-					icon="play"
+					:variant="query.doc.status !== 'Execution Successful' ? 'solid' : 'outline'"
+					iconLeft="play"
 					@click="query.executeSQL(nativeQuery)"
 					:loading="query.loading"
+					label="Run"
 				>
 				</Button>
 			</div>

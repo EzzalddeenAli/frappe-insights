@@ -7,6 +7,7 @@ export const API_METHODS = {
 	unstore: 'unstore',
 	convert: 'convert',
 	setLimit: 'set_limit',
+	set_status: 'set_status',
 	duplicate: 'duplicate',
 	reset: 'reset_and_save',
 	fetchTables: 'fetch_tables',
@@ -54,8 +55,6 @@ export function useQueryResource(name) {
 				return c
 			})
 			doc.json = safeJSONParse(doc.json, defaultQueryJSON)
-			doc.results = safeJSONParse(doc.results, [])
-			resource.resultColumns = doc.results[0]
 			doc.transforms = doc.transforms.map((t) => {
 				t.options = safeJSONParse(t.options, {})
 				return t

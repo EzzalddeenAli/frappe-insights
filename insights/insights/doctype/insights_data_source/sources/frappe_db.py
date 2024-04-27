@@ -11,8 +11,12 @@ from sqlalchemy.engine.base import Connection
 
 from insights.insights.query_builders.sql_builder import SQLQueryBuilder
 
-from .base_database import BaseDatabase
-from .mariadb import MARIADB_TO_GENERIC_TYPES
+from .base_database import (
+    BaseDatabase,
+    DatabaseCredentialsError,
+    DatabaseParallelConnectionError,
+)
+from .mariadb import MARIADB_TO_GENERIC_TYPES, MariaDB
 from .utils import create_insights_table, get_sqlalchemy_engine
 
 
@@ -190,7 +194,7 @@ class FrappeTableFactory:
                     links = self.db_conn.execute(
                         text(f"""select distinct {df.options} from `tab{df.parent}`""")
                     ).fetchall()
-                except BaseException:
+                except Exception:
                     continue
                 links = [l[0] for l in links]
                 for doctype in links:
@@ -199,7 +203,7 @@ class FrappeTableFactory:
         return dynamic_link_map
 
 
-class FrappeDB(BaseDatabase):
+class FrappeDB(MariaDB):
     def __init__(self, data_source, host, port, username, password, database_name, use_ssl, **_):
         self.data_source = data_source
         self.engine = get_sqlalchemy_engine(
@@ -214,12 +218,22 @@ class FrappeDB(BaseDatabase):
             ssl_verify_cert=True,
             charset="utf8mb4",
             use_unicode=True,
+            connect_args={"connect_timeout": 1, "read_timeout": 1, "write_timeout": 1},
         )
-        self.query_builder: SQLQueryBuilder = SQLQueryBuilder()
+        self.query_builder: SQLQueryBuilder = SQLQueryBuilder(self.engine)
         self.table_factory: FrappeTableFactory = FrappeTableFactory(data_source)
 
-    def test_connection(self):
-        return self.execute_query("select name from tabDocType limit 1", pluck=True)
+    def test_connection(self, log_errors=True):
+        return self.execute_query(
+            "select name from tabDocType limit 1", pluck=True, log_errors=log_errors
+        )
+
+    def handle_db_connection_error(self, e):
+        if "Access denied" in str(e):
+            raise DatabaseCredentialsError()
+        if "Packet sequence number wrong" in str(e):
+            raise DatabaseParallelConnectionError()
+        super().handle_db_connection_error(e)
 
     def sync_tables(self, tables=None, force=False):
         # "begin" ensures that the connection is committed and closed
@@ -264,7 +278,7 @@ class SiteDB(FrappeDB):
             charset="utf8mb4",
             use_unicode=True,
         )
-        self.query_builder: SQLQueryBuilder = SQLQueryBuilder()
+        self.query_builder: SQLQueryBuilder = SQLQueryBuilder(self.engine)
         self.table_factory: FrappeTableFactory = FrappeTableFactory(data_source)
 
 
@@ -274,10 +288,10 @@ from insights.cache_utils import get_or_set_cache, make_digest
 def is_frappe_db(db_params):
     def _is_frappe_db():
         try:
-            db = FrappeDB(**db_params)
-            return db.test_connection()
-        except BaseException:
+            FrappeDB(**db_params).test_connection(log_errors=False)
+        except Exception:
             return False
+        return True
 
     key = make_digest("is_frappe_db", db_params)
     return get_or_set_cache(key, _is_frappe_db, expiry=None)

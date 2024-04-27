@@ -5,6 +5,7 @@ import path from 'path'
 import {defineConfig} from 'vite'
 import {webserver_port} from '../../../sites/common_site_config.json'
 import {viteExternalsPlugin} from 'vite-plugin-externals'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
 	plugins: [
@@ -30,6 +31,10 @@ export default defineConfig({
 		target: 'es2015',
 		// byEzz
 	    // minify : false,
+		outDir: `../insights/public/frontend`,
+		emptyOutDir: true,
+		target: 'es2015',
+		sourcemap: true,
 		rollupOptions: {
 			//byEzz
 			// external: ['vue'],
@@ -47,5 +52,9 @@ export default defineConfig({
 	},
 	optimizeDeps: {
 		include: ['feather-icons', 'showdown', 'engine.io-client'],
+	},
+	define: {
+		// enable hydration mismatch details in production build
+		__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true',
 	},
 })
