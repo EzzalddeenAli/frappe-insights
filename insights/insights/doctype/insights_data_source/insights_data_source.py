@@ -78,6 +78,9 @@ class InsightsDataSource(Document):
             frappe.throw("Cannot delete the site database. It is needed for Insights.")
         if self.name == "Query Store":
             frappe.throw("Cannot delete the Query Store. It is needed for Insights.")
+        # /BY Ezz
+        if self.name == "examy":
+            frappe.throw("Cannot delete the Query Store. It is needed for Insights.")
 
         linked_doctypes = ["Insights Table"]
         for doctype in linked_doctypes:

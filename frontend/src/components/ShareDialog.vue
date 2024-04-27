@@ -156,12 +156,12 @@ watch(
 )
 const publicLink = computed(() => {
 	const publickKey = getPublicKey.data
-	const base = `${window.location.origin}/insights/public/dashboard/`
+	const base = `${window.location.origin}/apps/insights/public/dashboard/`
 	return isPublic.value && publickKey ? base + publickKey : null
 })
 const iFrame = computed(() => {
 	const publickKey = getPublicKey.data
-	const base = `${window.location.origin}/insights/public/dashboard/`
+	const base = `${window.location.origin}/apps/insights/public/dashboard/`
 	const iframeAttrs = `width="800" height="600" frameborder="0" allowtransparency`
 	return isPublic.value && publickKey
 		? `<iframe src="${base + publickKey}" ${iframeAttrs}></iframe>`

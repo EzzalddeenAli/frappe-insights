@@ -8,6 +8,8 @@ import os
 import frappe
 
 
+def create_roles():
+    pass
 def after_install():
     sync_site_tables()
 

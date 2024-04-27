@@ -38,6 +38,12 @@
 								]"
 								v-model="col.type"
 							></Input>
+								<Input
+							type="text"
+							label="عنوان الحقل"
+							v-model="col.label"
+							placeholder="عنوان الحقل"
+						/>
 							<Button
 								icon="check"
 								variant="solid"

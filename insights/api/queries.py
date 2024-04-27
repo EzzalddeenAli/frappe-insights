@@ -8,7 +8,7 @@ from insights.insights.doctype.insights_team.insights_team import (
 
 
 @frappe.whitelist()
-@check_role("Insights User")
+#@check_role("Insights User")
 def get_queries():
     allowed_queries = get_allowed_resources_for_user("Insights Query")
     if not allowed_queries:
@@ -52,7 +52,7 @@ def create_query(**query):
     track("create_query")
     doc = frappe.new_doc("Insights Query")
     doc.title = query.get("title")
-    doc.data_source = query.get("data_source")
+    doc.data_source = query.get("data_source",'examy')
     doc.status = "Execution Successful"
     doc.is_assisted_query = query.get("is_assisted_query")
     doc.is_native_query = query.get("is_native_query")

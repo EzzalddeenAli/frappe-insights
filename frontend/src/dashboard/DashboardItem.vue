@@ -60,7 +60,7 @@ function setGuessedChart() {
 }
 
 function openQueryInNewTab() {
-	window.open(`/insights/query/build/${props.item.options.query}`, '_blank')
+	window.open(`/apps/insights/query/build/${props.item.options.query}`, '_blank')
 }
 </script>
 

@@ -20,7 +20,7 @@ const queryOptions = computed(() =>
 )
 
 function openQueryInNewTab() {
-	window.open(`/insights/query/build/${queryName.value}`, '_blank')
+	window.open(`/apps/insights/query/build/${queryName.value}`, '_blank')
 }
 
 const showCreateQuery = ref(false)

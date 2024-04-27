@@ -8,8 +8,8 @@
 	"scripts": {
 		"dev": "vite",
 		"serve": "vite preview",
-		"build": "vite build --base=/assets/insights/frontend/ && yarn copy-html-entry",
-		"copy-html-entry": "cp ../insights/public/frontend/index.html ../insights/www/insights.html"
+		"build": "vite build --base=/cdnLocal/apps/report-viewer && yarn copy-html-entry",
+		"copy-html-entry": "cp ../public/cdnLocal/apps/report-viewer/index.html ../templates/index.html"
 	},
 	"dependencies": {
 		"@codemirror/lang-javascript": "^6.0.2",
@@ -47,6 +47,7 @@
 		"postcss": "^8.4.14",
 		"prettier": "^2.6.2",
 		"prettier-plugin-tailwindcss": "^0.1.11",
-		"sass": "^1.54.9"
+		"sass": "^1.54.9",
+		"vite-plugin-externals": "^0.6.2"
 	}
 }

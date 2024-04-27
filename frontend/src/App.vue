@@ -1,5 +1,5 @@
 <template>
-	<div class="flex h-screen w-screen bg-white antialiased">
+	<div class="flex h-screen w-screen bg-white antialiased"  :route="routeName">
 		<RouterView v-if="isGuestView" />
 		<Suspense v-else>
 			<AppShell />
@@ -17,6 +17,7 @@ import sessionStore from '@/stores/sessionStore'
 
 const route = useRoute()
 const isGuestView = computed(() => route.meta.isGuestView)
+const routeName = computed(() => route.name)
 
 if (!isGuestView.value) {
 	const $socket = inject('$socket')

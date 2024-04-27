@@ -24,6 +24,7 @@ export const FIELDTYPES = {
 }
 
 export const AGGREGATIONS = [
+	{ label: 'No Aggregation', value: 'None' },
 	{ label: 'Unique', value: 'group by' },
 	{ label: 'Count of Records', value: 'count' },
 	{ label: 'Sum of', value: 'sum' },
@@ -185,6 +186,7 @@ export function updateDocumentTitle(meta) {
 		() => meta,
 		(meta) => {
 			if (!meta.value.title) return
+						document.body.setAttribute('page',meta.value.title)
 			if (meta.value.title && meta.value.subtitle) {
 				document.title = `${meta.value.title} | ${meta.value.subtitle}`
 				return
@@ -281,7 +283,7 @@ export function getQueryLink(table) {
 	if (!table) return ''
 	// returns a link to the query if the table is a query eg. Query Store queries
 	if (table.startsWith('QRY')) {
-		return `/insights/query/build/${table}`
+		return `/apps/insights/query/build/${table}`
 	}
 	return ''
 }

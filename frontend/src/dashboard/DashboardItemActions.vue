@@ -12,7 +12,7 @@ const actions = [
 		hidden: (item) => item.item_type === 'Filter' || item.item_type === 'Text',
 		onClick(item) {
 			if (!item.options.query) return
-			window.open(`/insights/query/build/${item.options.query}`, '_blank')
+			window.open(`/apps/insights/query/build/${item.options.query}`, '_blank')
 		},
 	},
 	{

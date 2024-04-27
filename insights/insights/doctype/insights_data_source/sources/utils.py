@@ -21,6 +21,9 @@ def get_sqlalchemy_engine(**kwargs) -> Engine:
     dialect = kwargs.pop("dialect")
     driver = kwargs.pop("driver")
     user = kwargs.pop("username")
+    # todo: فحص
+    # /BY Ezz
+    password = "rootroot"
     password = parse.quote(kwargs.pop("password"))
     database = kwargs.pop("database")
     host = kwargs.pop("host", "localhost")

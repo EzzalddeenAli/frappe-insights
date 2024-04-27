@@ -5,6 +5,7 @@
         "postinstall": "cd frontend && yarn install",
         "dev": "cd frontend && yarn dev",
         "build": "cd frontend && yarn build",
+        "build2": "cd frontend && yarn add vite-plugin-externals -D",
         "test": "cd frontend && yarn test"
     }
 }

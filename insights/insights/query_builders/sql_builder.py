@@ -32,6 +32,8 @@ class Aggregations:
             return column
         if aggregation == "Group By":
             return column
+        if aggregation == "None":
+            return column
 
         agg_lower = aggregation.lower()
         if agg_lower == "sum" or agg_lower == "cumulative sum":
